@@ -57,6 +57,11 @@ const data = Object.entries(tree).map(([section, domains]) => ({
   })),
 }));
 
+const links = [
+  { title: 'Vocabulary flashcards', note: 'English words', url: 'https://claude.ai/public/artifacts/0dc7b1fb-5c27-4259-9a86-dd991fa38a2d' },
+  { title: 'Updated DSAT vocabulary list', note: '345 Tutoring', url: 'https://345tutoring.wordpress.com/updated-dsat-vocabulary-list/' },
+];
+
 const html = `<!doctype html>
 <html lang="en">
 <head>
@@ -105,10 +110,12 @@ a.b:active{opacity:.6}
 <main class="wrap" id="app"></main>
 <script>
 const DATA=${JSON.stringify(data).replace(/</g, '\\u003c')};
+const LINKS=${JSON.stringify(links).replace(/</g, '\\u003c')};
+const vocab=()=>'<details class="sec" open><summary>Vocabulary</summary><div class="topic" data-t="vocabulary vocab words flashcards '+esc(LINKS.map(l=>l.title+' '+l.note).join(' ').toLowerCase())+'">'+LINKS.map(l=>'<div class="row"><span class="n">'+esc(l.title)+' <small>'+esc(l.note)+'</small></span><a class="b" href="'+esc(l.url)+'" target="_blank" rel="noopener">Open</a></div>').join('')+'</div></details>';
 const mb=b=>b>=1048576?(b/1048576).toFixed(1)+' MB':Math.round(b/1024)+' KB';
 const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const app=document.getElementById('app');
-app.innerHTML=DATA.map(s=>\`<details class="sec" open><summary>\${esc(s.section)}</summary>\${s.domains.map(d=>\`<details class="dom" open><summary>\${esc(d.domain)}</summary>\${d.topics.map(t=>\`<div class="topic" data-t="\${esc((t.topic+' '+d.domain+' '+s.section).toLowerCase())}"><h3>\${esc(t.topic)}</h3>\${t.items.map(i=>\`<div class="row"><span class="n">Set \${esc(i.set)} <small>\${mb(i.size)}</small></span><a class="b" href="\${i.pdf}" target="_blank" rel="noopener">Questions</a>\${i.key?\`<a class="b k" href="\${i.key}" target="_blank" rel="noopener">Answer key</a>\`:''}</div>\`).join('')}</div>\`).join('')}</details>\`).join('')}</details>\`).join('')+'<div class="empty hide" id="none">No matches.</div>';
+app.innerHTML=vocab()+DATA.map(s=>\`<details class="sec" open><summary>\${esc(s.section)}</summary>\${s.domains.map(d=>\`<details class="dom" open><summary>\${esc(d.domain)}</summary>\${d.topics.map(t=>\`<div class="topic" data-t="\${esc((t.topic+' '+d.domain+' '+s.section).toLowerCase())}"><h3>\${esc(t.topic)}</h3>\${t.items.map(i=>\`<div class="row"><span class="n">Set \${esc(i.set)} <small>\${mb(i.size)}</small></span><a class="b" href="\${i.pdf}" target="_blank" rel="noopener">Questions</a>\${i.key?\`<a class="b k" href="\${i.key}" target="_blank" rel="noopener">Answer key</a>\`:''}</div>\`).join('')}</div>\`).join('')}</details>\`).join('')}</details>\`).join('')+'<div class="empty hide" id="none">No matches.</div>';
 const tb=document.getElementById('theme');
 const cur=()=>document.documentElement.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
 const label=()=>{tb.textContent=cur()==='dark'?'Light mode':'Dark mode'};
