@@ -64,14 +64,19 @@ const html = `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>SAT Practice</title>
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <style>
 :root{--bg:#f6f5f1;--card:#fff;--ink:#1c1c1a;--mute:#6b6a64;--line:#e4e2da;--acc:#2f5bd8;--acc2:#1f8a5b}
-@media (prefers-color-scheme:dark){:root{--bg:#141413;--card:#1e1e1c;--ink:#ecebe5;--mute:#9a988f;--line:#33322e;--acc:#7da2ff;--acc2:#5ccf9b}}
+:root[data-theme=light]{color-scheme:light}
+:root[data-theme=dark]{color-scheme:dark;--bg:#141413;--card:#1e1e1c;--ink:#ecebe5;--mute:#9a988f;--line:#33322e;--acc:#7da2ff;--acc2:#5ccf9b}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;--bg:#141413;--card:#1e1e1c;--ink:#ecebe5;--mute:#9a988f;--line:#33322e;--acc:#7da2ff;--acc2:#5ccf9b}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
 header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:12px 16px}
 .wrap{max-width:860px;margin:0 auto}
-h1{font-size:1.15rem;margin:0 0 8px}
+.top{display:flex;align-items:center;justify-content:space-between;margin:0 0 8px}
+h1{font-size:1.15rem;margin:0}
+#theme{font:inherit;font-size:.85rem;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
 input{width:100%;padding:10px 12px;font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px}
 main{padding:12px 16px 64px}
 details{margin:10px 0}
@@ -96,7 +101,7 @@ a.b:active{opacity:.6}
 </style>
 </head>
 <body>
-<header><div class="wrap"><h1>SAT Practice</h1><input id="q" type="search" placeholder="Search topics… (e.g. circles, transitions)" autocomplete="off"></div></header>
+<header><div class="wrap"><div class="top"><h1>SAT Practice</h1><button id="theme" type="button" aria-label="Toggle dark mode"></button></div><input id="q" type="search" placeholder="Search topics… (e.g. circles, transitions)" autocomplete="off"></div></header>
 <main class="wrap" id="app"></main>
 <script>
 const DATA=${JSON.stringify(data).replace(/</g, '\\u003c')};
@@ -104,6 +109,11 @@ const mb=b=>b>=1048576?(b/1048576).toFixed(1)+' MB':Math.round(b/1024)+' KB';
 const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const app=document.getElementById('app');
 app.innerHTML=DATA.map(s=>\`<details class="sec" open><summary>\${esc(s.section)}</summary>\${s.domains.map(d=>\`<details class="dom" open><summary>\${esc(d.domain)}</summary>\${d.topics.map(t=>\`<div class="topic" data-t="\${esc((t.topic+' '+d.domain+' '+s.section).toLowerCase())}"><h3>\${esc(t.topic)}</h3>\${t.items.map(i=>\`<div class="row"><span class="n">Set \${esc(i.set)} <small>\${mb(i.size)}</small></span><a class="b" href="\${i.pdf}" target="_blank" rel="noopener">Questions</a>\${i.key?\`<a class="b k" href="\${i.key}" target="_blank" rel="noopener">Answer key</a>\`:''}</div>\`).join('')}</div>\`).join('')}</details>\`).join('')}</details>\`).join('')+'<div class="empty hide" id="none">No matches.</div>';
+const tb=document.getElementById('theme');
+const cur=()=>document.documentElement.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+const label=()=>{tb.textContent=cur()==='dark'?'Light mode':'Dark mode'};
+label();
+tb.addEventListener('click',()=>{const n=cur()==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);try{localStorage.setItem('theme',n)}catch(e){}label()});
 const q=document.getElementById('q');
 q.addEventListener('input',()=>{
   const v=q.value.trim().toLowerCase();let any=false;
