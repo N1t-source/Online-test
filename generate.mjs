@@ -24,7 +24,7 @@ const href = (rel) => rel.map(encodeURIComponent).join('/');
 const keys = new Map();
 for (const f of files) {
   if (f.rel[0] !== 'Answers') continue;
-  keys.set(clean(f.rel.at(-1)).replace(/~key$/i, '').toLowerCase(), f);
+  keys.set(clean(f.rel.at(-1)).replace(/~key$/i, '').replace(/ answer key$/i, '').toLowerCase(), f);
 }
 
 // Practice: <Section>/<Domain>/<Topic>/<Name N>.pdf
@@ -36,10 +36,11 @@ for (const f of files) {
   const name = clean(f.rel.at(-1));
   const key = keys.get(name.toLowerCase());
   if (key) usedKeys.add(key);
-  const set = (name.match(/(\d+)$/) || [, name])[1];
+  const m = name.match(/(\d+)$/);
+  const set = m ? m[1] : '';
   ((tree[section] ??= {})[domain] ??= {})[topic] ??= [];
   tree[section][domain][topic].push({
-    set, name, size: f.size,
+    set, label: set ? 'Set ' + set : 'Full set', name, size: f.size,
     pdf: href(f.rel),
     key: key ? href(key.rel) : null,
   });
@@ -115,7 +116,7 @@ const vocab=()=>'<details class="sec" open><summary>Vocabulary</summary><div cla
 const mb=b=>b>=1048576?(b/1048576).toFixed(1)+' MB':Math.round(b/1024)+' KB';
 const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const app=document.getElementById('app');
-app.innerHTML=vocab()+DATA.map(s=>\`<details class="sec" open><summary>\${esc(s.section)}</summary>\${s.domains.map(d=>\`<details class="dom" open><summary>\${esc(d.domain)}</summary>\${d.topics.map(t=>\`<div class="topic" data-t="\${esc((t.topic+' '+d.domain+' '+s.section).toLowerCase())}"><h3>\${esc(t.topic)}</h3>\${t.items.map(i=>\`<div class="row"><span class="n">Set \${esc(i.set)} <small>\${mb(i.size)}</small></span><a class="b" href="\${i.pdf}" target="_blank" rel="noopener">Questions</a>\${i.key?\`<a class="b k" href="\${i.key}" target="_blank" rel="noopener">Answer key</a>\`:''}</div>\`).join('')}</div>\`).join('')}</details>\`).join('')}</details>\`).join('')+'<div class="empty hide" id="none">No matches.</div>';
+app.innerHTML=vocab()+DATA.map(s=>\`<details class="sec" open><summary>\${esc(s.section)}</summary>\${s.domains.map(d=>\`<details class="dom" open><summary>\${esc(d.domain)}</summary>\${d.topics.map(t=>\`<div class="topic" data-t="\${esc((t.topic+' '+d.domain+' '+s.section).toLowerCase())}"><h3>\${esc(t.topic)}</h3>\${t.items.map(i=>\`<div class="row"><span class="n">\${esc(i.label)} <small>\${mb(i.size)}</small></span><a class="b" href="\${i.pdf}" target="_blank" rel="noopener">Questions</a>\${i.key?\`<a class="b k" href="\${i.key}" target="_blank" rel="noopener">Answer key</a>\`:''}</div>\`).join('')}</div>\`).join('')}</details>\`).join('')}</details>\`).join('')+'<div class="empty hide" id="none">No matches.</div>';
 const tb=document.getElementById('theme');
 const cur=()=>document.documentElement.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
 const label=()=>{tb.textContent=cur()==='dark'?'Light mode':'Dark mode'};
