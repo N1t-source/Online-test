@@ -1,6 +1,7 @@
 // Scans this folder for PDFs and writes index.html. Re-run after adding/removing PDFs:  node generate.mjs
 import { readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative, sep, basename } from 'node:path';
+import { execFileSync } from 'node:child_process';
 
 const ROOT = process.cwd();
 const SKIP = new Set(['node_modules', '.git', '.vercel']);
@@ -17,6 +18,17 @@ function walk(dir, out = []) {
 }
 
 const files = walk(ROOT);
+
+// GitHub and Vercel are case-sensitive, Windows is not. When only the case of a name changes,
+// git on Windows keeps the OLD spelling, so link to the spelling git has recorded.
+try {
+  const out = execFileSync('git', ['-c', 'safe.directory=*', 'ls-files', '-z'], { cwd: ROOT, maxBuffer: 64 * 1024 * 1024 }).toString('utf8');
+  const tracked = new Map(out.split('\0').filter(Boolean).map((p) => [p.toLowerCase(), p]));
+  for (const f of files) {
+    const t = tracked.get(f.rel.join('/').toLowerCase());
+    if (t) f.rel = t.split('/');
+  }
+} catch { /* not a git checkout: keep the on-disk spelling */ }
 const clean = (f) => basename(f, '.pdf').replace(/^-+/, '').trim();
 const href = (rel) => rel.map(encodeURIComponent).join('/');
 
